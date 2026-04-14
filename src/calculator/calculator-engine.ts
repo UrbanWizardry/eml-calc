@@ -1,10 +1,25 @@
-import { Complex, emlAdd, emlSub, emlMul, emlDiv, emlPow, emlSin, emlCos, emlTan, emlSqrt } from '../core';
+import {
+  Complex,
+  emlAdd, emlSub, emlMul, emlDiv, emlPow,
+  emlSin, emlCos, emlTan, emlSqrt,
+  emlRecip, emlSinh, emlCosh, emlTanh,
+  emlArcsin, emlArccos, emlArctan,
+  emlLog10, emlLog2, emlLn, emlExp,
+  emlDegToRad, emlRadToDeg,
+  emlE, emlPi,
+} from '../core';
 import type { TreeNode } from '../core/eml-traced';
-import { traceBinaryOp, traceUnaryOp } from '../core/eml-traced';
+import { traceBinaryOp, traceUnaryOp, traceConstant } from '../core/eml-traced';
 
 export type CalcState = 'INITIAL' | 'OPERAND_ENTRY' | 'OPERATOR_PENDING' | 'RESULT_DISPLAY';
 export type BinaryOp = '+' | '-' | '*' | '/' | 'pow';
-export type UnaryOp = 'sin' | 'cos' | 'tan' | 'sqrt';
+export type UnaryOp =
+  | 'sin' | 'cos' | 'tan' | 'sqrt'
+  | 'arcsin' | 'arccos' | 'arctan'
+  | 'sinh' | 'cosh' | 'tanh'
+  | 'log10' | 'log2' | 'ln' | 'exp'
+  | 'recip' | 'rad' | 'deg';
+export type ConstOp = 'e' | 'pi';
 
 export interface EvalResult {
   emlValue: number;
@@ -29,7 +44,6 @@ function formatDisplay(value: number): string {
   }
 
   const str = value.toPrecision(12);
-  // Remove trailing zeros after decimal point
   if (str.includes('.')) {
     return str.replace(/\.?0+$/, '');
   }
@@ -65,9 +79,29 @@ function evaluateUnary(op: UnaryOp, x: number): EvalResult {
     case 'cos': emlResult = emlCos(cx); stdValue = Math.cos(x); break;
     case 'tan': emlResult = emlTan(cx); stdValue = Math.tan(x); break;
     case 'sqrt': emlResult = emlSqrt(cx); stdValue = Math.sqrt(x); break;
+    case 'arcsin': emlResult = emlArcsin(cx); stdValue = Math.asin(x); break;
+    case 'arccos': emlResult = emlArccos(cx); stdValue = Math.acos(x); break;
+    case 'arctan': emlResult = emlArctan(cx); stdValue = Math.atan(x); break;
+    case 'sinh': emlResult = emlSinh(cx); stdValue = Math.sinh(x); break;
+    case 'cosh': emlResult = emlCosh(cx); stdValue = Math.cosh(x); break;
+    case 'tanh': emlResult = emlTanh(cx); stdValue = Math.tanh(x); break;
+    case 'log10': emlResult = emlLog10(cx); stdValue = Math.log10(x); break;
+    case 'log2': emlResult = emlLog2(cx); stdValue = Math.log2(x); break;
+    case 'ln': emlResult = emlLn(cx); stdValue = Math.log(x); break;
+    case 'exp': emlResult = emlExp(cx); stdValue = Math.exp(x); break;
+    case 'recip': emlResult = emlRecip(cx); stdValue = 1 / x; break;
+    case 'rad': emlResult = emlDegToRad(cx); stdValue = x * Math.PI / 180; break;
+    case 'deg': emlResult = emlRadToDeg(cx); stdValue = x * 180 / Math.PI; break;
   }
 
   return { emlValue: emlResult.re, stdValue };
+}
+
+function evaluateConstant(op: ConstOp): EvalResult {
+  switch (op) {
+    case 'e': return { emlValue: emlE().re, stdValue: Math.E };
+    case 'pi': return { emlValue: emlPi().re, stdValue: Math.PI };
+  }
 }
 
 export class CalculatorEngine {
@@ -99,7 +133,6 @@ export class CalculatorEngine {
       this.inputBuffer = digit === '0' ? '0' : digit;
       this.state = 'OPERAND_ENTRY';
     } else {
-      // OPERAND_ENTRY: append
       if (this.inputBuffer === '0' && digit !== '0') {
         this.inputBuffer = digit;
       } else if (this.inputBuffer !== '0') {
@@ -119,7 +152,6 @@ export class CalculatorEngine {
       this.inputBuffer = '0.';
       this.state = 'OPERAND_ENTRY';
     } else {
-      // OPERAND_ENTRY: append decimal if not already present
       if (!this.inputBuffer.includes('.')) {
         this.inputBuffer += '.';
       }
@@ -129,12 +161,10 @@ export class CalculatorEngine {
 
   inputBinaryOp(op: BinaryOp): CalcSnapshot {
     if (this.state === 'OPERAND_ENTRY' && this.pendingOp !== null) {
-      // Chain: evaluate pending operation first
       this.executeOperation();
     } else if (this.state === 'OPERAND_ENTRY' || this.state === 'INITIAL') {
       this.accumulator = parseFloat(this.inputBuffer);
     } else if (this.state === 'RESULT_DISPLAY') {
-      // Use the EML result as the new accumulator
       const val = parseFloat(this.emlResult);
       this.accumulator = isNaN(val) ? parseFloat(this.inputBuffer) : val;
     }
@@ -158,6 +188,16 @@ export class CalculatorEngine {
     this.stdResult = formatDisplay(result.stdValue);
     this.inputBuffer = this.emlResult;
     this.lastTree = traceUnaryOp(op, value);
+    this.state = 'RESULT_DISPLAY';
+    return this.getSnapshot();
+  }
+
+  inputConstant(op: ConstOp): CalcSnapshot {
+    const result = evaluateConstant(op);
+    this.emlResult = formatDisplay(result.emlValue);
+    this.stdResult = formatDisplay(result.stdValue);
+    this.inputBuffer = this.emlResult;
+    this.lastTree = traceConstant(op);
     this.state = 'RESULT_DISPLAY';
     return this.getSnapshot();
   }

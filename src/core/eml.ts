@@ -148,8 +148,12 @@ export function emlPi(): Complex {
 
 // --- Level 7: Powers and Roots ---
 
-/** x^y = exp(y * ln(x)) */
+/**
+ * x^y = exp(y * ln(x))
+ * Guard: 0^y = 0 for any y (avoids ln(0) = -Infinity chain issues).
+ */
 export function emlPow(base: Complex, exponent: Complex): Complex {
+  if (base.magnitude < 1e-300) return Complex.ZERO;
   return emlExp(emlMul(exponent, emlLn(base)));
 }
 
@@ -181,4 +185,74 @@ export function emlCos(x: Complex): Complex {
 /** tan(x) = sin(x) / cos(x) */
 export function emlTan(x: Complex): Complex {
   return emlDiv(emlSin(x), emlCos(x));
+}
+
+// --- Level 9: Reciprocal ---
+
+/** 1/x = div(1, x) */
+export function emlRecip(x: Complex): Complex {
+  return emlDiv(Complex.ONE, x);
+}
+
+// --- Level 10: Hyperbolic Functions ---
+
+/** sinh(x) = (exp(x) - exp(-x)) / 2 */
+export function emlSinh(x: Complex): Complex {
+  return emlDiv(emlSub(emlExp(x), emlExp(emlNeg(x))), emlTwo());
+}
+
+/** cosh(x) = (exp(x) + exp(-x)) / 2 */
+export function emlCosh(x: Complex): Complex {
+  return emlDiv(emlAdd(emlExp(x), emlExp(emlNeg(x))), emlTwo());
+}
+
+/** tanh(x) = sinh(x) / cosh(x) */
+export function emlTanh(x: Complex): Complex {
+  return emlDiv(emlSinh(x), emlCosh(x));
+}
+
+// --- Level 11: Inverse Trigonometric Functions ---
+
+/** arcsin(x) = -i * ln(ix + sqrt(1 - x^2)) */
+export function emlArcsin(x: Complex): Complex {
+  const ix = emlMul(emlI(), x);
+  const body = emlAdd(ix, emlSqrt(emlSub(Complex.ONE, emlMul(x, x))));
+  return emlMul(emlNeg(emlI()), emlLn(body));
+}
+
+/** arccos(x) = pi/2 - arcsin(x) */
+export function emlArccos(x: Complex): Complex {
+  return emlSub(emlDiv(emlPi(), emlTwo()), emlArcsin(x));
+}
+
+/** arctan(x) = (1/(2i)) * ln((1+ix)/(1-ix)) */
+export function emlArctan(x: Complex): Complex {
+  const ix = emlMul(emlI(), x);
+  const num = emlAdd(Complex.ONE, ix);
+  const den = emlSub(Complex.ONE, ix);
+  return emlMul(emlDiv(Complex.ONE, emlMul(emlTwo(), emlI())), emlLn(emlDiv(num, den)));
+}
+
+// --- Level 12: Logarithms (change of base) ---
+
+/** log10(x) = ln(x) / ln(10) */
+export function emlLog10(x: Complex): Complex {
+  return emlDiv(emlLn(x), emlLn(Complex.from(10)));
+}
+
+/** log2(x) = ln(x) / ln(2) */
+export function emlLog2(x: Complex): Complex {
+  return emlDiv(emlLn(x), emlLn(emlTwo()));
+}
+
+// --- Level 13: Angle Conversions ---
+
+/** deg→rad: x * pi / 180 */
+export function emlDegToRad(x: Complex): Complex {
+  return emlMul(x, emlDiv(emlPi(), Complex.from(180)));
+}
+
+/** rad→deg: x * 180 / pi */
+export function emlRadToDeg(x: Complex): Complex {
+  return emlMul(x, emlDiv(Complex.from(180), emlPi()));
 }

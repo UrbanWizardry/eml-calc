@@ -44,9 +44,9 @@ body {
   transition: max-width 0.3s ease;
 }
 
-/* When tree panel is open, widen the root to accommodate side panel */
+/* When tree panel is open, let root fill the viewport */
 #root:has(.calculator-layout--with-tree) {
-  max-width: 95vw;
+  max-width: calc(100vw - 2rem);
 }
 
 /* --- App shell --- */
@@ -81,15 +81,20 @@ body {
 
 .calculator-layout {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1rem;
   justify-content: center;
+}
+
+.calculator-layout--with-tree {
+  min-height: min(80vh, 600px);
 }
 
 .calculator-layout .calculator {
   flex-shrink: 0;
   width: 420px;
   max-width: 100%;
+  align-self: flex-start;
 }
 
 /* --- Calculator --- */
@@ -170,17 +175,13 @@ body {
   gap: 8px;
 }
 
-/* Scientific row: 5 equal buttons across 20 cols = 4 cols each */
-.keypad > :nth-child(1),
-.keypad > :nth-child(2),
-.keypad > :nth-child(3),
-.keypad > :nth-child(4),
-.keypad > :nth-child(5) {
+/* Scientific rows (4 rows of 5): 5 equal buttons across 20 cols = 4 cols each */
+.keypad > :nth-child(-n+20) {
   grid-column: span 4;
 }
 
-/* Regular rows: 4 equal buttons across 20 cols = 5 cols each */
-.keypad > :nth-child(n+6) {
+/* Regular rows (4 cols): 4 equal buttons across 20 cols = 5 cols each */
+.keypad > :nth-child(n+21) {
   grid-column: span 5;
 }
 
@@ -269,8 +270,8 @@ body {
 .tree-side-panel {
   flex: 1;
   min-width: 300px;
-  max-width: 700px;
   align-self: stretch;
+  overflow: hidden;
 }
 
 .tree-panel {
@@ -329,7 +330,8 @@ body {
 .tree-container {
   overflow: auto;
   flex: 1;
-  min-height: 200px;
+  min-height: 0; /* allow flex shrinking so container respects panel height */
+  position: relative;
 }
 
 .tree-container svg {

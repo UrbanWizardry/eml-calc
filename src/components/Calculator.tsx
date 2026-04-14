@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { CalculatorEngine } from '../calculator/calculator-engine';
-import type { CalcSnapshot, BinaryOp, UnaryOp } from '../calculator/calculator-engine';
+import type { CalcSnapshot, BinaryOp, UnaryOp, ConstOp } from '../calculator/calculator-engine';
 import { Display } from './Display';
 import { Keypad } from './Keypad';
 import { TreeView } from './TreeView';
@@ -52,6 +52,10 @@ export function Calculator() {
     update(engineRef.current.inputNegate());
   }, [update]);
 
+  const handleConstant = useCallback((op: ConstOp) => {
+    update(engineRef.current.inputConstant(op));
+  }, [update]);
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key >= '0' && e.key <= '9') {
@@ -94,6 +98,7 @@ export function Calculator() {
           onDecimal={handleDecimal}
           onBinaryOp={handleBinaryOp}
           onUnaryOp={handleUnaryOp}
+          onConstant={handleConstant}
           onEquals={handleEquals}
           onClear={handleClear}
           onNegate={handleNegate}

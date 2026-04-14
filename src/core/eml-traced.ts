@@ -142,6 +142,9 @@ export function emlPiT(): Traced {
 // --- Level 7: powers and roots ---
 
 export function emlPowT(base: Traced, exponent: Traced): Traced {
+  if (base[0].magnitude < 1e-300) {
+    return named('pow', [base[1], exponent[1]], c('0', Complex.ZERO));
+  }
   const inner = emlExpT(emlMulT(exponent, emlLnT(base)));
   return named('pow', [base[1], exponent[1]], inner);
 }
@@ -180,10 +183,88 @@ export function emlTanT(x: Traced): Traced {
   return named('tan', [x[1]], inner);
 }
 
+// --- Level 9: reciprocal ---
+
+export function emlRecipT(x: Traced): Traced {
+  const inner = emlDivT(ONE_T, x);
+  return named('1/x', [x[1]], inner);
+}
+
+// --- Level 10: hyperbolic ---
+
+export function emlSinhT(x: Traced): Traced {
+  const inner = emlDivT(emlSubT(emlExpT(x), emlExpT(emlNegT(x))), emlTwoT());
+  return named('sinh', [x[1]], inner);
+}
+
+export function emlCoshT(x: Traced): Traced {
+  const inner = emlDivT(emlAddT(emlExpT(x), emlExpT(emlNegT(x))), emlTwoT());
+  return named('cosh', [x[1]], inner);
+}
+
+export function emlTanhT(x: Traced): Traced {
+  const inner = emlDivT(emlSinhT(x), emlCoshT(x));
+  return named('tanh', [x[1]], inner);
+}
+
+// --- Level 11: inverse trigonometric ---
+
+export function emlArcsinT(x: Traced): Traced {
+  const i = emlIT();
+  const ix = emlMulT(i, x);
+  const body = emlAddT(ix, emlSqrtT(emlSubT(ONE_T, emlMulT(x, x))));
+  const inner = emlMulT(emlNegT(i), emlLnT(body));
+  return named('arcsin', [x[1]], inner);
+}
+
+export function emlArccosT(x: Traced): Traced {
+  const inner = emlSubT(emlDivT(emlPiT(), emlTwoT()), emlArcsinT(x));
+  return named('arccos', [x[1]], inner);
+}
+
+export function emlArctanT(x: Traced): Traced {
+  const i = emlIT();
+  const ix = emlMulT(i, x);
+  const num = emlAddT(ONE_T, ix);
+  const den = emlSubT(ONE_T, ix);
+  const inner = emlMulT(emlDivT(ONE_T, emlMulT(emlTwoT(), i)), emlLnT(emlDivT(num, den)));
+  return named('arctan', [x[1]], inner);
+}
+
+// --- Level 12: logarithms ---
+
+export function emlLog10T(x: Traced): Traced {
+  const inner = emlDivT(emlLnT(x), emlLnT(c('10', Complex.from(10))));
+  return named('log10', [x[1]], inner);
+}
+
+export function emlLog2T(x: Traced): Traced {
+  const inner = emlDivT(emlLnT(x), emlLnT(emlTwoT()));
+  return named('log2', [x[1]], inner);
+}
+
+// --- Level 13: angle conversions ---
+
+export function emlDegToRadT(x: Traced): Traced {
+  const inner = emlMulT(x, emlDivT(emlPiT(), c('180', Complex.from(180))));
+  return named('rad', [x[1]], inner);
+}
+
+export function emlRadToDegT(x: Traced): Traced {
+  const inner = emlMulT(x, emlDivT(c('180', Complex.from(180)), emlPiT()));
+  return named('deg', [x[1]], inner);
+}
+
 // --- Public API for calculator integration ---
 
 export type BinaryOp = '+' | '-' | '*' | '/' | 'pow';
-export type UnaryOp = 'sin' | 'cos' | 'tan' | 'sqrt';
+export type UnaryOp =
+  | 'sin' | 'cos' | 'tan' | 'sqrt'
+  | 'arcsin' | 'arccos' | 'arctan'
+  | 'sinh' | 'cosh' | 'tanh'
+  | 'log10' | 'log2' | 'ln' | 'exp'
+  | 'recip' | 'rad' | 'deg';
+export type ConstOp = 'e' | 'pi';
 
 export function traceBinaryOp(op: BinaryOp, a: number, b: number): TreeNode {
   const ta: Traced = inp('x', Complex.from(a));
@@ -207,6 +288,28 @@ export function traceUnaryOp(op: UnaryOp, x: number): TreeNode {
     case 'cos': result = emlCosT(tx); break;
     case 'tan': result = emlTanT(tx); break;
     case 'sqrt': result = emlSqrtT(tx); break;
+    case 'arcsin': result = emlArcsinT(tx); break;
+    case 'arccos': result = emlArccosT(tx); break;
+    case 'arctan': result = emlArctanT(tx); break;
+    case 'sinh': result = emlSinhT(tx); break;
+    case 'cosh': result = emlCoshT(tx); break;
+    case 'tanh': result = emlTanhT(tx); break;
+    case 'log10': result = emlLog10T(tx); break;
+    case 'log2': result = emlLog2T(tx); break;
+    case 'ln': result = emlLnT(tx); break;
+    case 'exp': result = emlExpT(tx); break;
+    case 'recip': result = emlRecipT(tx); break;
+    case 'rad': result = emlDegToRadT(tx); break;
+    case 'deg': result = emlRadToDegT(tx); break;
+  }
+  return result[1];
+}
+
+export function traceConstant(op: ConstOp): TreeNode {
+  let result: Traced;
+  switch (op) {
+    case 'e': result = emlET(); break;
+    case 'pi': result = emlPiT(); break;
   }
   return result[1];
 }

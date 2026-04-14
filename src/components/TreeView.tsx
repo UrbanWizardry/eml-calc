@@ -87,8 +87,9 @@ export function TreeView({ tree }: TreeViewProps) {
   }
 
   const nodeCount = countNodes(tree);
-  const svgW = bounds.width + PADDING * 2;
-  const svgH = bounds.height + PADDING * 2 + NODE_H;
+  // Content size at current zoom -- used for scroll extent
+  const contentW = (bounds.width + PADDING * 2) * zoom + PADDING;
+  const contentH = (bounds.height + PADDING * 2 + NODE_H) * zoom + PADDING;
 
   return (
     <div className="tree-panel">
@@ -113,14 +114,18 @@ export function TreeView({ tree }: TreeViewProps) {
       <div className="tree-container">
         <svg
           ref={svgRef}
-          width={Math.max(svgW * zoom + PADDING, 200)}
-          height={Math.max(svgH * zoom + PADDING, 120)}
+          style={{
+            width: `${Math.max(contentW, 100)}px`,
+            height: `${Math.max(contentH, 100)}px`,
+            minWidth: '100%',
+            minHeight: '100%',
+            cursor: isDragging ? 'grabbing' : 'grab',
+          }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onWheel={handleWheel}
-          style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
           <g transform={`translate(${pan.x + PADDING * zoom}, ${pan.y + PADDING * zoom}) scale(${zoom})`}>
             <TreeNodeView
