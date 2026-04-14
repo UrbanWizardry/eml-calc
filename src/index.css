@@ -1,0 +1,401 @@
+:root {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  color: #ececec;
+  background-color: #1a1a2e;
+
+  --calc-bg: #16213e;
+  --calc-border: #0f3460;
+  --display-bg: #0a0e1a;
+  --btn-primary: #1a1a3e;
+  --btn-primary-hover: #2a2a5e;
+  --btn-operator: #e94560;
+  --btn-operator-hover: #ff6b81;
+  --btn-secondary: #533483;
+  --btn-secondary-hover: #6f42c1;
+  --btn-utility: #2a3a5e;
+  --btn-utility-hover: #3a4a7e;
+  --btn-equals: #0f3460;
+  --btn-equals-hover: #1a4a80;
+  --text-primary: #ececec;
+  --text-dim: #8892b0;
+  --text-result: #64ffda;
+  --text-std: #ffd93d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+#root {
+  width: 100%;
+  max-width: 420px;
+  transition: max-width 0.3s ease;
+}
+
+/* When tree panel is open, widen the root to accommodate side panel */
+#root:has(.calculator-layout--with-tree) {
+  max-width: 95vw;
+}
+
+/* --- App shell --- */
+
+.app-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.app-header .subtitle {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-top: 0.25rem;
+}
+
+.app-footer {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* --- Calculator layout (wrapper for calc + tree side panel) --- */
+
+.calculator-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.calculator-layout .calculator {
+  flex-shrink: 0;
+  width: 420px;
+  max-width: 100%;
+}
+
+/* --- Calculator --- */
+
+.calculator {
+  background: var(--calc-bg);
+  border: 2px solid var(--calc-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Display --- */
+
+.display {
+  background: var(--display-bg);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  min-height: 100px;
+}
+
+.display-eml,
+.display-std {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.display-eml {
+  margin-bottom: 0.5rem;
+}
+
+.display-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.display-eml .display-label {
+  color: var(--text-result);
+}
+
+.display-std .display-label {
+  color: var(--text-std);
+}
+
+.display-value {
+  font-family: 'Courier New', monospace;
+  font-size: 1.75rem;
+  font-weight: 500;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.display-eml .display-value {
+  color: var(--text-result);
+}
+
+.display-std .display-value {
+  color: var(--text-std);
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+/* --- Keypad --- */
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 8px;
+}
+
+/* Scientific row: 5 equal buttons across 20 cols = 4 cols each */
+.keypad > :nth-child(1),
+.keypad > :nth-child(2),
+.keypad > :nth-child(3),
+.keypad > :nth-child(4),
+.keypad > :nth-child(5) {
+  grid-column: span 4;
+}
+
+/* Regular rows: 4 equal buttons across 20 cols = 5 cols each */
+.keypad > :nth-child(n+6) {
+  grid-column: span 5;
+}
+
+/* --- Buttons --- */
+
+.calc-btn {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  padding: 0.85rem 0;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calc-btn:active {
+  transform: scale(0.96);
+}
+
+.calc-btn--primary {
+  background: var(--btn-primary);
+}
+.calc-btn--primary:hover {
+  background: var(--btn-primary-hover);
+}
+
+.calc-btn--operator {
+  background: var(--btn-operator);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+.calc-btn--operator:hover {
+  background: var(--btn-operator-hover);
+}
+
+.calc-btn--secondary {
+  background: var(--btn-secondary);
+  font-size: 0.9rem;
+}
+.calc-btn--secondary:hover {
+  background: var(--btn-secondary-hover);
+}
+
+.calc-btn--utility {
+  background: var(--btn-utility);
+}
+.calc-btn--utility:hover {
+  background: var(--btn-utility-hover);
+}
+
+.calc-btn--equals {
+  background: var(--btn-equals);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.calc-btn--equals:hover {
+  background: var(--btn-equals-hover);
+}
+
+/* --- Tree toggle button --- */
+
+.tree-toggle-btn {
+  width: 100%;
+  margin-top: 8px;
+  padding: 0.5rem;
+  border: 1px solid var(--calc-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tree-toggle-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-dim);
+}
+
+/* --- Tree side panel --- */
+
+.tree-side-panel {
+  flex: 1;
+  min-width: 300px;
+  max-width: 700px;
+  align-self: stretch;
+}
+
+.tree-panel {
+  border: 1px solid var(--calc-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--display-bg);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--calc-border);
+  flex-shrink: 0;
+}
+
+.tree-info {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.tree-header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tree-orient-btn,
+.tree-reset-btn {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border: 1px solid var(--calc-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tree-orient-btn:hover,
+.tree-reset-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-dim);
+}
+
+.tree-orient-btn.active {
+  color: var(--text-result);
+  border-color: var(--text-result);
+}
+
+.tree-container {
+  overflow: auto;
+  flex: 1;
+  min-height: 200px;
+}
+
+.tree-container svg {
+  display: block;
+}
+
+.tree-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* --- Responsive --- */
+
+/* On narrow screens, stack tree below calculator */
+@media (max-width: 800px) {
+  .calculator-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .calculator-layout .calculator {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .tree-side-panel {
+    width: 100%;
+    max-width: 420px;
+    min-width: unset;
+  }
+
+  #root:has(.calculator-layout--with-tree) {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 460px) {
+  .calculator {
+    border-radius: 12px;
+    padding: 0.75rem;
+  }
+
+  .display-value {
+    font-size: 1.4rem;
+  }
+
+  .display-std .display-value {
+    font-size: 0.95rem;
+  }
+
+  .calc-btn {
+    font-size: 1rem;
+    padding: 0.7rem 0;
+  }
+
+  .calc-btn--operator {
+    font-size: 1.2rem;
+  }
+
+  .calc-btn--secondary {
+    font-size: 0.8rem;
+  }
+}
