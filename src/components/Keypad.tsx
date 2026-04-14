@@ -69,9 +69,9 @@ export function Keypad({
       <Button label="3" onClick={() => onDigit('3')} />
       <Button label="+" onClick={() => onBinaryOp('+')} variant="operator" ariaLabel="add" />
 
-      {/* Row 9: 0 (span 2) = (span 2) */}
-      <Button label="0" onClick={() => onDigit('0')} span={2} />
-      <Button label="=" onClick={onEquals} variant="equals" span={2} />
+      {/* Row 9: 0 (2 buttons wide) = (2 buttons wide) */}
+      <Button label="0" onClick={() => onDigit('0')} span={10} />
+      <Button label="=" onClick={onEquals} variant="equals" span={10} />
     </div>
   );
 }
